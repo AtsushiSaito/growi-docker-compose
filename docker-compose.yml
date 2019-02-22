@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 127.0.0.1:3000:3000    # localhost only by default
+      - 3000:3000 # ローカル外からアクセス
     links:
       - mongo:mongo
       - elasticsearch:elasticsearch
@@ -16,12 +16,8 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/growi
       - ELASTICSEARCH_URI=http://elasticsearch:9200/growi
-      - PASSWORD_SEED=changeme
-      # - FILE_UPLOAD=local     # activate this line if you use local storage of server rather than AWS
-      # - MATHJAX=1             # activate this line if you want to use MathJax
-      # - PLANTUML_URI=http://  # activate this line and specify if you use your own PlantUML server rather than public plantuml.com
-      # - HACKMD_URI=http://    # activate this line and specify HackMD server URI which can be accessed from GROWI client browsers
-      # - HACKMD_URI_FOR_SERVER=http://hackmd:3000  # activate this line and specify HackMD server URI which can be accessed from this server container
+      - PASSWORD_SEED=Hoge # シード名を変更
+      - FILE_UPLOAD=local # ローカルで使用
 
     command: "dockerize
               -wait tcp://mongo:27017
@@ -30,12 +26,14 @@ services:
               npm run server:prod"
     volumes:
       - growi_data:/data
+    restart: always      ### 自動起動の設定(追加) ###
 
   mongo:
     image: mongo:3.4
     volumes:
       - mongo_configdb:/data/configdb
       - mongo_db:/data/db
+    restart: always      ### 自動起動の設定(追加) ###
 
   elasticsearch:
     image: elasticsearch:5.3-alpine
@@ -51,10 +49,31 @@ services:
       - es_data:/usr/share/elasticsearch/data
       - es_plugins:/usr/share/elasticsearch/plugins
       - ./esconfig:/usr/share/elasticsearch/config
+    restart: always      ### 自動起動の設定(追加) ###
 
-volumes:
-  growi_data:
-  mongo_configdb:
-  mongo_db:
-  es_data:
-  es_plugins:
+volumes:    ### 以下のようにホストのディレクトリを追記 ###
+   growi_data:
+      driver_opts:
+        type: none
+        device: /Users/atsushi/Docker/Growi/data/growi_data
+        o: bind
+   mongo_configdb:
+      driver_opts:
+        type: none
+        device: /Users/atsushi/Docker/Growi/data/mongo_configdb
+        o: bind
+   mongo_db:
+      driver_opts:
+        type: none
+        device: /Users/atsushi/Docker/Growi/data/mongo_db
+        o: bind
+   es_data:
+      driver_opts:
+        type: none
+        device: /Users/atsushi/Docker/Growi/data/es_data
+        o: bind
+   es_plugins:
+      driver_opts:
+        type: none
+        device: /Users/atsushi/Docker/Growi/data/es_plugins
+        o: bind
